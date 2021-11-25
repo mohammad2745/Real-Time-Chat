@@ -2,6 +2,7 @@ const chatForm = document.getElementById('chat-form');
 const chatMessages = document.querySelector('.chat-messages');
 const roomName = document.getElementById('room-name');
 const userList = document.getElementById('users');
+const userDrop = document.getElementById('userDrop');
 
 // Get username and room from URL 
 const { username, room } = Qs.parse(location.search, {
@@ -34,9 +35,18 @@ chatForm.addEventListener('submit', e => {
 
     // Get message
     const msg = e.target.elements.msg.value;
+    // Get user from dropdown
+    const username = e.target.elements.userDrop.value;
+    console.log(username);
 
     // Emit message to server
-    socket.emit('chatMessage', msg);
+    if (username == "") {
+        socket.emit('chatMessage', msg);
+    } else {
+
+        socket.emit('personalMessage', { msg, username });
+    }
+
 
     // Clear input
     e.target.elements.msg.value = '';
@@ -65,4 +75,12 @@ function outputUsers(users) {
     userList.innerHTML = `
     ${users.map(user => `<li>${user.username}</li>`).join('')}
   `;
+
+  const all = { id:"", username:"All" };
+    users.unshift(all);
+
+    userDrop.innerHTML = `
+        ${users.map(user => `<option value='${user.id}'>${user.username}</option>`).join('')}
+    `;
+    users.shift(all);
 }

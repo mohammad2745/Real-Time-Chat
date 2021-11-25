@@ -41,6 +41,21 @@ io.on('connection', socket => {
         io.to(user.room).emit('message', formatMessage(user.username, msg));
     });
 
+    //Personal message
+    socket.on('personalMessage', ({ msg, username }) => {
+        const user = getCurrentUser(socket.id);
+        // const status = " (Private message)";
+        //console.log({msg,sendadd});
+        io.to(username).emit('message', formatMessage(user.username, msg));
+        io.to(user.id).emit('message', formatMessage(user.username, msg));
+    });
+
+    // Listen for User(Dropdown)
+    socket.on('selectUser', username => {
+        dropuser = username;
+        console.log(dropuser);
+    });
+
     // Runs when a client disconnects
     socket.on('disconnect', () => {
         const user = userLeave(socket.id);

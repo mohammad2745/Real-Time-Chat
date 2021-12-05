@@ -3,7 +3,7 @@ const http = require('http');
 const express = require('express');
 const socketio = require('socket.io');
 const formatMessage = require('./utils/messages');
-const { userJoin, getCurrentUser, userLeave, getRoomUsers } = require('./utils/users');
+const { userJoin, getCurrentUser, userLeave, getRoomUsers, getTotalUser } = require('./utils/users');
 
 const app = express();
 const server = http.createServer(app);
@@ -13,12 +13,13 @@ const io = socketio(server);
 app.use(express.static(path.join(__dirname, 'public')));
 
 const botName = '';
+let host = '';
 
 // Run when client connects
 io.on('connection', socket => {
     socket.on('joinroom', ({ username, room }) => {
         const user = userJoin(socket.id, username, room);
-        //console.log(user.id); //generate random id of 20 chars
+        // console.log(user.id); //generate random id of 20 chars
         socket.join(user.room);
 
         // Welcome current user
@@ -35,6 +36,12 @@ io.on('connection', socket => {
             users: getRoomUsers(user.room),
         });
 
+        // Get host id
+        if (getRoomUsers(user.room).length > 1) {
+            host = getRoomUsers(user.room)[0].id;
+            console.log(host);
+            socket.to(host).emit('videoCallIcon', 1);
+        }
 
     });
 
@@ -58,7 +65,19 @@ io.on('connection', socket => {
     socket.on('disconnect', () => {
         const user = userLeave(socket.id);
 
+        // Get host id
+        if (user.id === host && getRoomUsers(user.room).length > 1) {
+            host = getRoomUsers(user.room)[0].id;
+            console.log(host);
+            socket.to(host).emit('videoCallIcon', 1);
+        }
         if (user) {
+            // Get host id
+            if (getRoomUsers(user.room).length == 1) {
+                socket.to(host).emit('videoCallIcon', 0);
+                videoCallIcon = 0;
+            }
+
             io.to(user.room).emit('message', formatMessage(botName, '', `${user.username} has left the chat`, ''));
         }
 
@@ -70,6 +89,7 @@ io.on('connection', socket => {
 
     });
 
+    // Video Descriptions
     socket.on('joinCall', ({ conferenceroom, sendto }) => {
         const user = getCurrentUser(socket.id);
         socket.join(conferenceroom);

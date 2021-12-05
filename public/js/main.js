@@ -6,10 +6,12 @@ const chatMessages = document.querySelector('.chat-messages');
 const roomName = document.getElementById('room-name');
 const userList = document.getElementById('users');
 const select = document.getElementById('dropdown');
+const selfname = document.getElementById('selfname');
+
 const video = document.getElementById('video');
+// const videoEnd = document.getElementById('videoEnd');
 const acc = document.getElementById('acc');
 const reject = document.getElementById('reject');
-const selfname = document.getElementById('selfname');
 
 
 // Get username and room from URL 
@@ -45,7 +47,6 @@ socket.on('connect', () => {
     socket.emit('joinroom', { username, room });
 })
 
-
 // 
 let users = [];
 let member;
@@ -56,10 +57,23 @@ socket.on('user-id', ID => {
 // Get room and users
 socket.on('roomUsers', ({ room, users }) => {
     selfname.innerText = username;
+    firstUser = users[0];
+
     users = users.filter(user => user.id !== userID);
     member = users.length;
+
     outputRoomName(room);
     outputUsers(users);
+});
+
+// Show Video Icon
+let flag;
+socket.on('videoCallIcon', flag => {
+    if (flag === 1) {
+        video.style = 'display: block';
+    } else
+        video.style = 'display: none';
+    // console.log(flag)
 });
 
 // Message from server
@@ -168,6 +182,7 @@ socket.on('room_created', async () => {
 
 socket.on('videocall-room',(conferenceroom) => {
     //console.log(' room_created');
+    video.style = 'display: none';
     acc.style = 'display: block; padding:5px; font-size: 18px; background-color: green; color: white';
     reject.style = 'display: block; padding:5px; font-size: 18px; background-color: red; color: white';
     acc.addEventListener('click', async() => {
@@ -199,6 +214,8 @@ socket.on( 'newUserStart', ( data ) => {
     pc.push( data.sender );
     init( false, data.sender );
 });
+
+
 
 socket.on( 'ice candidates', async ( data ) => {
     data.candidate ? await pc[data.sender].addIceCandidate( new RTCIceCandidate( data.candidate ) ) : '';
@@ -321,7 +338,7 @@ function init( createOffer, partnerName ) {
             //put div in main-section elem
             document.getElementById( 'videos' ).appendChild( cardDiv );
 
-            adjustVideoElemSize();
+            // adjustVideoElemSize();
         }
     };
 
@@ -354,7 +371,7 @@ function init( createOffer, partnerName ) {
 
 // video call functions
 function getAndSetUserStream() {
-    chatContainer.style = 'display: none';
+    // chatContainer.style = 'display: none';
     let commElem = document.getElementsByClassName( 'room-comm' );
     //console.log(commElem.length);
     for ( let i = 0; i < commElem.length; i++ ) {

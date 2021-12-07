@@ -14,12 +14,13 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 const botName = '';
 let host = '';
+let videoChatIni = 0;
 
 // Run when client connects
 io.on('connection', socket => {
     socket.on('joinroom', ({ username, room }) => {
         const user = userJoin(socket.id, username, room);
-        // console.log(user.id); //generate random id of 20 chars
+
         socket.join(user.room);
 
         // Welcome current user
@@ -39,8 +40,22 @@ io.on('connection', socket => {
         // Get host id
         if (getRoomUsers(user.room).length > 1) {
             host = getRoomUsers(user.room)[0].id;
-            console.log(host);
+            // console.log(host);
             socket.to(host).emit('videoCallIcon', 1);
+        }
+
+        // Host Response Icon show
+        socket.on('RequestVideo', (message) => {
+            console.log(host);
+            console.log(message);
+            socket.to(host).emit('acceptVideoCallIcon', );
+        });
+
+        // Request Video Call for New User
+        if (videoChatIni === 1) {
+            // console.log(user.username);
+            // console.log(user.id);
+            io.to(user.id).emit('requestVideoCall', 1);
         }
 
     });
@@ -68,14 +83,14 @@ io.on('connection', socket => {
         // Get host id
         if (user.id === host && getRoomUsers(user.room).length > 1) {
             host = getRoomUsers(user.room)[0].id;
-            console.log(host);
-            socket.to(host).emit('videoCallIcon', 1);
+            // console.log(host);
+            io.to(host).emit('videoCallIcon', 1);
         }
         if (user) {
             // Get host id
             if (getRoomUsers(user.room).length == 1) {
                 socket.to(host).emit('videoCallIcon', 0);
-                videoCallIcon = 0;
+                // videoCallIcon = 0;
             }
 
             io.to(user.room).emit('message', formatMessage(botName, '', `${user.username} has left the chat`, ''));
@@ -97,6 +112,8 @@ io.on('connection', socket => {
             sendto = user.room;
             io.to(user.room).emit('message', formatMessage(botName, '', `${user.username} has started video call`, ''));
         }
+
+        videoChatIni = 1;
         socket.emit('room_created');
         socket.to(sendto).emit('videocall-room', conferenceroom);
     });

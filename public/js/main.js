@@ -12,6 +12,8 @@ const video = document.getElementById('video');
 // const videoEnd = document.getElementById('videoEnd');
 const acc = document.getElementById('acc');
 const reject = document.getElementById('reject');
+const videoReq = document.getElementById('videoReq');
+const videoAcc = document.getElementById('videoAcc');
 
 
 // Get username and room from URL 
@@ -57,23 +59,13 @@ socket.on('user-id', ID => {
 // Get room and users
 socket.on('roomUsers', ({ room, users }) => {
     selfname.innerText = username;
-    firstUser = users[0];
-
+    // firstUser = users[0];
+    // console.log(firstUser);
     users = users.filter(user => user.id !== userID);
     member = users.length;
 
     outputRoomName(room);
     outputUsers(users);
-});
-
-// Show Video Icon
-let flag;
-socket.on('videoCallIcon', flag => {
-    if (flag === 1) {
-        video.style = 'display: block';
-    } else
-        video.style = 'display: none';
-    // console.log(flag)
 });
 
 // Message from server
@@ -162,17 +154,25 @@ function sendadd(){
 var pc = [];
 var myStream = '';
 var conferenceroom;
+
+// Video Call Start from Host 
 video.addEventListener('click', async() => {
     //socket.emit('start_call', room);
     conferenceroom = 1;
     //console.log(member);
     if(member>0){
-        socket.emit('joinCall', ({conferenceroom,
-            sendto}));
+        socket.emit('joinCall', ({conferenceroom, sendto}));
     }
     else{
         alert('No one is available');
     }
+});
+
+// Request Video Call from new user
+videoReq.addEventListener('click', async() => {
+  socket.emit('RequestVideo', 'Request message to join video call');
+  socket.emit('joinCall', ({conferenceroom, sendto}));
+  // console.log('new user request');
 });
 
 socket.on('room_created', async () => {
@@ -215,7 +215,29 @@ socket.on( 'newUserStart', ( data ) => {
     init( false, data.sender );
 });
 
+// Show Video Icon
+let flag;
+socket.on('videoCallIcon', flag => {
+    if (flag === 1) {
+        video.style = 'display: block';
+    } else
+        video.style = 'display: none';
+    // console.log(flag)
+});
 
+// Show Accept video request in Host side
+socket.on('acceptVideoCallIcon', () => {
+  videoAcc.style = 'display: block';
+});
+
+// Show request Video Icon
+let reqVideo;
+socket.on('requestVideoCall', (reqVideo) => {
+  if(reqVideo ===1)
+    videoReq.style = 'display: block'; 
+  else
+    videoReq.style = 'display: none';
+});
 
 socket.on( 'ice candidates', async ( data ) => {
     data.candidate ? await pc[data.sender].addIceCandidate( new RTCIceCandidate( data.candidate ) ) : '';

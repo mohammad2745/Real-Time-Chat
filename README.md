@@ -4,7 +4,7 @@ Realtime chat app with websockets using Node.js, Express and Socket.io with Vani
 
 # Installation Process
 
-git clone https://github.com/mohammad2745/Real-Time-Chat
+git clone https://github.com/mohammad2745/Real-Time-Chat </br>
 npm install </br>
 npm install express socket.io moment </br>
 npm install -D nodemon </br>
